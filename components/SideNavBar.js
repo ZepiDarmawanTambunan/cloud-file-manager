@@ -4,6 +4,8 @@ import Image from 'next/image'
 import {menu} from '@/constants';
 import { useSession } from 'next-auth/react';
 
+import CreateFolderModal from "./Folder/CreateFolderModal";
+
 function SideNavBar() {
     const router = useRouter();
     const [activeIndex, setActiveIndex] = useState(0);
@@ -33,7 +35,7 @@ function SideNavBar() {
             </svg>
         </button>
         <button className='flex gap-2 items-center text-[13px] bg-sky-400 p-2 
-            text-white rounded-md px-3 hover:scale-105 transition-all mt-5 w-full justify-center' onClick={()=>window.my_model_3.showModal()}>
+            text-white rounded-md px-3 hover:scale-105 transition-all mt-5 w-full justify-center' onClick={()=>window.my_modal_3.showModal()}>
             Create Folder
             <svg xmlns='http://www.w3.org/2000/svg'
                 fill='none'
@@ -69,6 +71,10 @@ function SideNavBar() {
                 </h2>
             ))}
         </div>
+
+        <dialog id='my_modal_3' className='modal'>
+            <CreateFolderModal/>
+        </dialog>
     </div>
   )
 }

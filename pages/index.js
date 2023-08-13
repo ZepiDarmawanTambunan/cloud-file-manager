@@ -1,10 +1,10 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-
-const inter = Inter({ subsets: ['latin'] })
+import SearchBar from '@/components/SearchBar';
+import FolderList from '@/components/Folder/FolderList';
+import FileList from '@/components/File/FileList';
+import { fileList, folderList } from '@/constants';
 
 export default function Home() {
   const {data: session} = useSession();
@@ -18,10 +18,10 @@ export default function Home() {
   }, [session])
 
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-
-    </main>
+    <div className='p-5'>
+      <SearchBar/>
+      <FolderList folderList={folderList} />
+      <FileList fileList={fileList} />
+    </div>
   )
 }

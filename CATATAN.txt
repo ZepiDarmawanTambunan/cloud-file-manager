@@ -11,3 +11,4 @@ What import alias would you like configured? @/*
 in tailwind.config.js -> 
   plugins: [require("daisyui")],
 - npm install next-auth
+- npm i moment
