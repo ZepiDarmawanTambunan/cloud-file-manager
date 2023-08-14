@@ -12,3 +12,24 @@ in tailwind.config.js ->
   plugins: [require("daisyui")],
 - npm install next-auth
 - npm i moment
+
+- create firebase & setup for website
+- npm install firebase
+- copy code from firebase to /config
+- next.config.js handle image from firebase
+
+- v.1.0.0
+
+- v.1.0.1
+fix bug login page
+fix bug _app
+fix bug logout
+add confirmation to delete folder
+add search file
+
+- v.1.0.2
+add admin
+add secret key to folder
+
+- v.1.0.3
+add payment

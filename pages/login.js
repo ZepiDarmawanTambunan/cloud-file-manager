@@ -1,4 +1,5 @@
 import { signIn, useSession } from 'next-auth/react'
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -19,6 +20,9 @@ function login() {
 
   return (
     <div className='flex justify-center items-center h-screen'>
+        <Head>
+          <title>Login Page</title>
+        </Head>
         <button className='bg-blue-400 p-2 rounded-xl px-3 text-white' onClick={() => signIn()}>
             Login with google
         </button>

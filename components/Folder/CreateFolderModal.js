@@ -1,11 +1,34 @@
-import React, {useState} from 'react'
+import React, {useContext, useEffect, useState} from 'react'
 import Image from 'next/image'
+import { useSession } from 'next-auth/react';
+import {doc, getFirestore, setDoc} from 'firebase/firestore';
+
+import {app} from '../../config/firebaseConfig';
+import { ShowToastContext } from '../../context/ShowToastContext';
+import { ParentFolderIdContext } from "../../context/ParentFolderIdContext.js";
+
 
 function CreateFolderModal() {
+    const docId = Date.now().toString();
     const [folderName, setFolderName] = useState();
+    const {showToastMsg, setShowToastMsg} = useContext(ShowToastContext);
+    const {data:session} = useSession();
+    const {parentFolderId, setParentFolderId} = useContext(ParentFolderIdContext);
 
-    const onCreate = () => {
+    const db = getFirestore(app)
+    useEffect(() => {
+
+    }, [])
+
+    const onCreate = async () => {
         console.log(folderName);
+        await setDoc(doc(db, "Folders", docId), {
+            name: folderName,
+            id: docId,
+            createdBy: session.user.email,
+            parentFolderId: parentFolderId
+        })
+        setShowToastMsg('Folder Created');
     }
 
 
