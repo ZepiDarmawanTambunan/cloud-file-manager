@@ -10,7 +10,7 @@ import { ParentFolderIdContext } from "../../context/ParentFolderIdContext.js";
 
 function CreateFolderModal() {
     const docId = Date.now().toString();
-    const [folderName, setFolderName] = useState();
+    const [folderName, setFolderName] = useState('');
     const {showToastMsg, setShowToastMsg} = useContext(ShowToastContext);
     const {data:session} = useSession();
     const {parentFolderId, setParentFolderId} = useContext(ParentFolderIdContext);
@@ -22,13 +22,16 @@ function CreateFolderModal() {
 
     const onCreate = async () => {
         console.log(folderName);
-        await setDoc(doc(db, "Folders", docId), {
-            name: folderName,
-            id: docId,
-            createdBy: session.user.email,
-            parentFolderId: parentFolderId
-        })
-        setShowToastMsg('Folder Created');
+        if(folderName != '' || folderName != null){
+            await setDoc(doc(db, "Folders", docId), {
+                name: folderName,
+                id: docId,
+                createdBy: session.user.email,
+                parentFolderId: parentFolderId
+            })
+            setFolderName('');
+            setShowToastMsg('Folder Created'); 
+        }
     }
 
 
@@ -40,7 +43,7 @@ function CreateFolderModal() {
             </button>
             <div className='w-full items-center flex flex-col justify-center gap-3'>
                 <Image src="/folder.png" alt='folder' width={50} height={50} />
-                <input type='text' placeholder='Folder Name' className='p-2 border-[1px] outline-none rounded-md' onChange={(e) => setFolderName(e.target.value)} />
+                <input type='text' placeholder='Folder Name' className='p-2 border-[1px] outline-none rounded-md' value={folderName} onChange={(e) => setFolderName(e.target.value)} />
                 <button className='bg-blue-500 text-white rounded-md p-2 px-3 w-full'
                  onClick={()=> onCreate()}>
                     Create

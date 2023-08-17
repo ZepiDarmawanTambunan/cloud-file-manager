@@ -9,17 +9,21 @@ import { ParentFolderIdContext } from '@/context/ParentFolderIdContext';
 import { ShowToastContext } from '@/context/ShowToastContext';
 import { app } from '@/config/firebaseConfig';
 import { fileList, folderList } from '@/constants';
+import DeleteConfirmation from '@/components/File/DeleteConfirmation';
+import { deleteObject, getStorage, ref } from 'firebase/storage';
 
 function FolderDetails() {
     const router = useRouter();
     const {name, id} = router.query;
     const {data: session} = useSession();
     const {parentFolderId, setParentFolderId} = useContext(ParentFolderIdContext);
+    const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
 
     const {showToastMsg, setShowToastMsg} = useContext(ShowToastContext);
     const [folderList, setFolderList] = useState([]);
     const [fileList, setFileList] = useState([]);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     useEffect(() => {
         setParentFolderId(id);
@@ -31,12 +35,44 @@ function FolderDetails() {
         }
     }, [id, session, showToastMsg]);
 
-    const deleteFolder = async () => {
-        await deleteDoc(doc(db, "Folders", id)).then(res => {
-            setShowToastMsg('Folder Deleted !');
-            router.back();
-        })
-    }
+    const deleteFolderAndFilesRecursively = async (folderId) => {
+        // Find and delete files within the current folder
+        const filesQuery = query(
+            collection(db, "files"),
+            where('parentFolderId', '==', folderId),
+            where('createdBy', '==', session.user.email)
+        );
+        
+        const filesSnapshot = await getDocs(filesQuery);
+        const deleteFilePromises = filesSnapshot.docs.map(async fileDoc => {
+            const fileData = fileDoc.data();
+            // Delete file from storage
+            if (fileData.imageUrl) {
+                const storageRef = ref(storage, fileData.imageUrl);
+                await deleteObject(storageRef);
+            }
+            await deleteDoc(fileDoc.ref);
+        });
+    
+        await Promise.all(deleteFilePromises);
+    
+        // Recursively delete child folders within the current folder
+        const childFoldersQuery = query(
+            collection(db, "Folders"),
+            where('createdBy', '==', session.user.email),
+            where('parentFolderId', '==', folderId),
+        );
+        console.log(folderId);
+        const childFoldersSnapshot = await getDocs(childFoldersQuery);
+        
+        childFoldersSnapshot.forEach(async childFolderDoc => {
+            await deleteFolderAndFilesRecursively(childFolderDoc.id);
+            await deleteDoc(childFolderDoc.ref); // Delete the child folder document
+        });
+
+        await deleteDoc(doc(db, 'Folders', folderId));
+        router.back();
+    };
 
     const getFolderList = async() => {
         setFileList([]);
@@ -65,12 +101,12 @@ function FolderDetails() {
     }
 
   return (
-    <div className='p-5'>
+    <>
         <SearchBar/>
         <h2 className='text-[20px] font-bold mt-5'>
             {name}
             <svg xmlns="http://www.w3.org/2000/svg" 
-                onClick={()=>deleteFolder()}
+                onClick={() => setIsDeleteConfirmationOpen(true)}
                 fill="none" viewBox="0 0 24 24" 
                 strokeWidth={1.5} stroke="currentColor"
                 className="w-5 h-5 float-right text-red-500
@@ -84,8 +120,19 @@ function FolderDetails() {
             : <h2 className='text-gray-400 text-[16px] mt-5'>No Folder Found</h2>
         }
 
+        {isDeleteConfirmationOpen && (
+            <DeleteConfirmation
+            isOpen={isDeleteConfirmationOpen}
+            onCancel={() => setIsDeleteConfirmationOpen(false)}
+            onDelete={() => {
+                setIsDeleteConfirmationOpen(false);
+                deleteFolderAndFilesRecursively(id);
+            }}
+            />
+        )}
+
         <FileList fileList={fileList} />
-    </div>
+    </>
   )
 }
 

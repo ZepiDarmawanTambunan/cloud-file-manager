@@ -1,22 +1,18 @@
 import { signIn, useSession } from 'next-auth/react'
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 function login() {
-  const [calledPush, setCalledPush] = useState(false); // handle error
-  const {data: session} = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
-  
+
   useEffect(() => {
-    if(session){
-        if (calledPush) { //handle error
-            return;
-        }
-        router.replace('/');
-        setCalledPush(true); // handle error
+    if(session && status != 'loading'){
+      router.push('/');
     }
   }, [session])
+
 
   return (
     <div className='flex justify-center items-center h-screen'>

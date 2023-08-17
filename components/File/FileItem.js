@@ -5,16 +5,20 @@ import { deleteDoc, doc, getFirestore } from 'firebase/firestore';
 import { app } from '@/config/firebaseConfig';
 import { ShowToastContext } from '@/context/ShowToastContext';
 import DeleteConfirmation from './DeleteConfirmation';
+import { deleteObject, getStorage, ref } from 'firebase/storage';
 
 function FileItem({ file }) {
   const db = getFirestore(app);
+  const storage = getStorage(app);
   const { showToastMsg, setShowToastMsg } = useContext(ShowToastContext);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] = useState(false);
 
   const deleteFile = async (file) => {
-    await deleteDoc(doc(db, 'files', file.id.toString())).then((resp) => {
-      setShowToastMsg('File Deleted!!!');
-    });
+    const db = getFirestore(app);
+    await deleteDoc(doc(db, 'files', file.id.toString()));
+    const fileRef = ref(storage, `file/${file.name}.${file.type}`);
+    await deleteObject(fileRef);
+    setShowToastMsg('File Deleted!!!');
   };
 
   return (

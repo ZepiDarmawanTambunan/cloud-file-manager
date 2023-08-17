@@ -16,5 +16,8 @@ export const authOptions = {
     // ...add more providers here
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  session:{
+    maxAge: 24 * 60 * 60,
+  }
 }
 export default NextAuth(authOptions)

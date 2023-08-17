@@ -25,7 +25,7 @@ fix bug login page
 fix bug _app
 fix bug logout
 add confirmation to delete folder
-add search file
+add search folder & file
 
 - v.1.0.2
 add admin

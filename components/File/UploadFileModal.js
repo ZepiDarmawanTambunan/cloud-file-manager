@@ -1,7 +1,7 @@
 import { app } from '@/config/firebaseConfig';
 import { ParentFolderIdContext } from '@/context/ParentFolderIdContext';
 import { ShowToastContext } from '@/context/ShowToastContext';
-import { getFirestore, setDoc, doc, where } from 'firebase/firestore';
+import { getFirestore, setDoc, doc } from 'firebase/firestore';
 import { useSession } from 'next-auth/react'
 import React, { useContext } from 'react'
 import {getDownloadURL, getStorage, ref, uploadBytes} from 'firebase/storage';
@@ -21,7 +21,9 @@ function UploadFileModal({closeModal}) {
                 setShowToastMsg('File is too large');
                 return ;
             }
-            const fileRef = ref(storage, "file/" + file.name);
+            const fileExtension = file.name.split(".")[1];
+            const randomFileName = Date.now() + "_" + Math.random().toString(36).substring(7);
+            const fileRef = ref(storage, "file/" + randomFileName + "." + fileExtension);
             
             uploadBytes(fileRef, file)
             .then((snapshot) => {
@@ -31,8 +33,8 @@ function UploadFileModal({closeModal}) {
                 getDownloadURL(fileRef).then(async(downloadURL) => {
                     console.log('File available at', downloadURL);
                     await setDoc(doc(db, 'files', docId.toString()), {
-                        name: file.name,
-                        type: file.name.split(".")[1],
+                        name: randomFileName,
+                        type: fileExtension,
                         size: file.size,
                         modifiedAt: file.lastModified,
                         createdBy: session.user.email,

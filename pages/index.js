@@ -1,5 +1,3 @@
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 import SearchBar from '@/components/SearchBar';
 import FolderList from '@/components/Folder/FolderList';
@@ -8,24 +6,23 @@ import FileList from '@/components/File/FileList';
 import { ParentFolderIdContext } from '@/context/ParentFolderIdContext';
 import { ShowToastContext } from '@/context/ShowToastContext';
 import { app } from '../config/firebaseConfig';
-import { collection, getDocs, getFirestore, query, where } from 'firebase/firestore';
+import { collection, endAt, getDocs, getFirestore, orderBy, query, startAt, where } from 'firebase/firestore';
 import Head from 'next/head';
+import { useSession } from 'next-auth/react';
 
 export default function Home() {
-  const {data: session} = useSession();
-  const router = useRouter();
   const [folderList, setFolderList] = useState([]);
   const [fileList, setFileList] = useState([]);
   
   const db = getFirestore(app);
   const {parentFolderId, setParentFolderId} = useContext(ParentFolderIdContext);
   const {showToastMsg, setShowToastMsg} = useContext(ShowToastContext);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    if(!session){
-      router.push('/login');
-    }else{
+    if(session && status != 'loading'){
       setFolderList([]);
+      setFileList([]);
       getFolderList();
       getFileList();
       console.log("User session", session.user);
@@ -46,29 +43,63 @@ export default function Home() {
       setFolderList(folderList=>([...folderList, doc.data()]));
     })
   }
-
+  
   const getFileList = async() => {
     setFileList([]);
     const q = query(
       collection(db, 'files'),
       where('parentFolderId', '==', 0),
       where('createdBy', '==', session.user.email)
-    );
+      );
 
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach((doc) => {
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
       setFileList(fileList => [...fileList, doc.data()])
     })
   }
+  
+  const handleSearch = async(search) => {
+    setFolderList([]);
+    setFileList([]);
+    
+    if(search === "" || search === null || search.trim() === ""){
+      getFolderList();
+      getFileList();
+    }else{
+      const qFolder = query(
+        collection(db, "Folders"),
+        where('createdBy', '==', session.user.email),
+        orderBy('name'),
+        startAt(search),
+        endAt(search + '\uf8ff')
+      );
+      const querySnapshotFolder = await getDocs(qFolder);
+      querySnapshotFolder.forEach((doc) => {
+        setFolderList(folderList => ([...folderList, doc.data()]));
+      });
+
+        const qFile = query(
+          collection(db, 'files'),
+          where('createdBy', '==', session.user.email),
+          orderBy('name'),
+          startAt(search),
+          endAt(search + '\uf8ff')
+        );
+        const querySnapshotFile = await getDocs(qFile);
+        querySnapshotFile.forEach((doc) => {
+        setFileList(fileList => [...fileList, doc.data()])
+      })
+    }
+  }
 
   return (
-    <div className='p-5'>
+    <>
       <Head>
         <title>Home Page</title>
       </Head>
-      <SearchBar/>
+      <SearchBar handleSearch={handleSearch}/>
       <FolderList folderList={folderList} />
       <FileList fileList={fileList} />
-    </div>
+    </>
   )
 }
