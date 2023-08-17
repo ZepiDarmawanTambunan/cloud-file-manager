@@ -69,9 +69,8 @@ export default function Home() {
       const qFolder = query(
         collection(db, "Folders"),
         where('createdBy', '==', session.user.email),
-        orderBy('name'),
-        startAt(search),
-        endAt(search + '\uf8ff')
+        where('name', '>=', search),
+        where('name', '<=', search + '\uf8ff')
       );
       const querySnapshotFolder = await getDocs(qFolder);
       querySnapshotFolder.forEach((doc) => {
@@ -81,9 +80,8 @@ export default function Home() {
         const qFile = query(
           collection(db, 'files'),
           where('createdBy', '==', session.user.email),
-          orderBy('name'),
-          startAt(search),
-          endAt(search + '\uf8ff')
+          where('name', '>=', search),
+          where('name', '<=', search + '\uf8ff')
         );
         const querySnapshotFile = await getDocs(qFile);
         querySnapshotFile.forEach((doc) => {
